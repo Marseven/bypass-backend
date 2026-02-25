@@ -45,7 +45,7 @@
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
         "post-install-cmd": [
-            "@php -r \"if (is_dir('.husky') && is_dir('.git/hooks')) { foreach(glob('.husky/*') as $f) { $t = '.git/hooks/' . basename($f); copy($f, $t); chmod($t, 0755); } echo 'Git hooks installed.'.PHP_EOL; }\""
+            "bash -c \"test -d .husky && test -d .git/hooks && cp .husky/* .git/hooks/ && chmod +x .git/hooks/* && echo 'Git hooks installed.' || true\""
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
