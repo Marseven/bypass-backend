@@ -1,0 +1,2619 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "ByPass API",
+        "description": "API de gestion de bypass réalisée par JOBS Conseil. Cette API permet de gérer les demandes de bypass, les équipements, les zones, les capteurs et les utilisateurs.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "Serveur API ByPass"
+        }
+    ],
+    "paths": {
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Connexion utilisateur",
+                "description": "Authentifie un utilisateur et retourne un token d'accès",
+                "operationId": "8cb7742ae98d0990acb2907c4e00bf24",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "username",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "user": {
+                                                    "$ref": "#/components/schemas/User"
+                                                },
+                                                "token": {
+                                                    "type": "string",
+                                                    "example": "1|xxxxxxxxxxxxx"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "example": [
+                                                "Connexion réussie"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Déconnexion utilisateur",
+                "description": "Invalide le token d'accès actuel de l'utilisateur",
+                "operationId": "0d29c740dc06d77602af8095bf4654cc",
+                "responses": {
+                    "200": {
+                        "description": "Déconnexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Déconnexion réussie"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "tags": [
+                    "Authentification"
+                ],
+                "summary": "Informations utilisateur connecté",
+                "description": "Retourne les informations de l'utilisateur actuellement authentifié",
+                "operationId": "a9c495788506b114956e3f509e5d90a2",
+                "responses": {
+                    "200": {
+                        "description": "Informations utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/summary": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Résumé du tableau de bord",
+                "description": "Retourne un résumé des statistiques principales du système",
+                "operationId": "27df0e3bdacc2d298cefc91608322ffe",
+                "responses": {
+                    "200": {
+                        "description": "Résumé du tableau de bord",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "new_requests": {
+                                            "description": "Nouvelles demandes",
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "active_requests": {
+                                            "description": "Demandes actives",
+                                            "type": "integer",
+                                            "example": 12
+                                        },
+                                        "pending_validation": {
+                                            "description": "Demandes en attente de validation",
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "approved_today": {
+                                            "description": "Demandes approuvées aujourd'hui",
+                                            "type": "integer",
+                                            "example": 2
+                                        },
+                                        "connected_users": {
+                                            "description": "Utilisateurs connectés",
+                                            "type": "integer",
+                                            "example": 15
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/recent-requests": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Dernières demandes",
+                "description": "Retourne les 10 dernières demandes créées",
+                "operationId": "2fc3a3d11c5e5d9f433ca0b89b4db968",
+                "responses": {
+                    "200": {
+                        "description": "Liste des dernières demandes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Request"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/system-status": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Statut du système",
+                "description": "Retourne le statut général du système (équipements, capteurs, alertes)",
+                "operationId": "cc9bc9a47f9615e82f7bd217ee9de4f0",
+                "responses": {
+                    "200": {
+                        "description": "Statut du système",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "monitored_equipment": {
+                                            "description": "Équipements surveillés",
+                                            "type": "integer",
+                                            "example": 45
+                                        },
+                                        "online_sensors": {
+                                            "description": "Capteurs en ligne",
+                                            "type": "integer",
+                                            "example": 120
+                                        },
+                                        "active_alerts": {
+                                            "description": "Alertes actives",
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "system_performance": {
+                                            "description": "Performance du système (%)",
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 95.5
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/equipment": {
+            "get": {
+                "tags": [
+                    "Équipements"
+                ],
+                "summary": "Liste des équipements",
+                "description": "Récupère la liste des équipements avec filtres optionnels",
+                "operationId": "c16a39fcc2c9e03d0e2697d67712f329",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrer par statut",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "operational",
+                                "maintenance",
+                                "down",
+                                "standby"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Rechercher dans nom ou localisation",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des équipements paginée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Equipment"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Équipements"
+                ],
+                "summary": "Créer un équipement",
+                "description": "Crée un nouvel équipement. Accessible uniquement aux administrateurs.",
+                "operationId": "2e3df0557dce454e87831f194bd9319b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "type",
+                                    "criticite",
+                                    "fabricant",
+                                    "zone"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Équipement 1"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "Capteur de température"
+                                    },
+                                    "criticite": {
+                                        "type": "string",
+                                        "example": "Haute"
+                                    },
+                                    "fabricant": {
+                                        "type": "string",
+                                        "example": "Fabricant XYZ"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Description de l'équipement",
+                                        "nullable": true
+                                    },
+                                    "zone": {
+                                        "type": "string",
+                                        "example": "Zone A"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "operational",
+                                            "maintenance",
+                                            "down",
+                                            "standby"
+                                        ],
+                                        "example": "operational"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Équipement créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Equipment"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "422": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/equipment/{equipment}": {
+            "get": {
+                "tags": [
+                    "Équipements"
+                ],
+                "summary": "Détails d'un équipement",
+                "description": "Récupère les détails d'un équipement spécifique avec ses capteurs",
+                "operationId": "f3bb1568b4b0fc98743a8f6a0933e525",
+                "parameters": [
+                    {
+                        "name": "equipment",
+                        "in": "path",
+                        "description": "ID de l'équipement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de l'équipement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Equipment"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Équipements"
+                ],
+                "summary": "Mettre à jour un équipement",
+                "description": "Met à jour les informations d'un équipement. Accessible uniquement aux administrateurs.",
+                "operationId": "26a55e30c8daf8776281bdb5cb7c1418",
+                "parameters": [
+                    {
+                        "name": "equipment",
+                        "in": "path",
+                        "description": "ID de l'équipement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Équipement 1"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "Capteur de température"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "operational",
+                                            "maintenance",
+                                            "down",
+                                            "standby"
+                                        ],
+                                        "example": "operational"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Équipement mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Equipment"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Équipements"
+                ],
+                "summary": "Supprimer un équipement",
+                "description": "Supprime un équipement. Accessible uniquement aux administrateurs.",
+                "operationId": "36d5b210acd8759607043f303026cff1",
+                "parameters": [
+                    {
+                        "name": "equipment",
+                        "in": "path",
+                        "description": "ID de l'équipement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Équipement supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Équipement supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/requests": {
+            "get": {
+                "tags": [
+                    "Demandes"
+                ],
+                "summary": "Liste des demandes",
+                "description": "Récupère la liste des demandes de bypass avec filtres optionnels. Les non-administrateurs ne voient que leurs propres demandes.",
+                "operationId": "710454682359a38d76568e36c6cbe851",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrer par statut",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "approved",
+                                "rejected",
+                                "in_progress",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "description": "Filtrer par priorité",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "low",
+                                "normal",
+                                "high",
+                                "critical",
+                                "emergency"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Rechercher dans titre, description ou code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes paginée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Request"
+                                            }
+                                        },
+                                        "current_page": {
+                                            "type": "integer"
+                                        },
+                                        "total": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Demandes"
+                ],
+                "summary": "Créer une demande de bypass",
+                "description": "Crée une nouvelle demande de bypass avec toutes les informations nécessaires",
+                "operationId": "fe92316bd8d2e46452c729e51b04fbb6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reason",
+                                    "detailedJustification",
+                                    "urgencyLevel",
+                                    "equipmentId",
+                                    "sensorId",
+                                    "plannedStartDate",
+                                    "estimatedDuration",
+                                    "safetyImpact",
+                                    "operationalImpact",
+                                    "environmentalImpact",
+                                    "mitigationMeasures"
+                                ],
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "preventive_maintenance"
+                                    },
+                                    "detailedJustification": {
+                                        "type": "string",
+                                        "example": "Justification détaillée de la demande"
+                                    },
+                                    "urgencyLevel": {
+                                        "type": "string",
+                                        "enum": [
+                                            "low",
+                                            "normal",
+                                            "high",
+                                            "critical",
+                                            "emergency"
+                                        ],
+                                        "example": "high"
+                                    },
+                                    "equipmentId": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "sensorId": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "plannedStartDate": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2025-01-20T10:00:00Z"
+                                    },
+                                    "estimatedDuration": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "safetyImpact": {
+                                        "type": "string",
+                                        "enum": [
+                                            "very_low",
+                                            "low",
+                                            "medium",
+                                            "high",
+                                            "very_high"
+                                        ],
+                                        "example": "medium"
+                                    },
+                                    "operationalImpact": {
+                                        "type": "string",
+                                        "enum": [
+                                            "very_low",
+                                            "low",
+                                            "medium",
+                                            "high",
+                                            "very_high"
+                                        ],
+                                        "example": "medium"
+                                    },
+                                    "environmentalImpact": {
+                                        "type": "string",
+                                        "enum": [
+                                            "very_low",
+                                            "low",
+                                            "medium",
+                                            "high",
+                                            "very_high"
+                                        ],
+                                        "example": "low"
+                                    },
+                                    "mitigationMeasures": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "example": [
+                                            "Mesure 1",
+                                            "Mesure 2"
+                                        ]
+                                    },
+                                    "contingencyPlan": {
+                                        "type": "string",
+                                        "example": "Plan de contingence",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Demande créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Request"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "401": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/requests/{request}": {
+            "get": {
+                "tags": [
+                    "Demandes"
+                ],
+                "summary": "Détails d'une demande",
+                "description": "Récupère les détails d'une demande spécifique",
+                "operationId": "bad61fe9cd3911ad17ccb546f71b6419",
+                "parameters": [
+                    {
+                        "name": "request",
+                        "in": "path",
+                        "description": "ID de la demande",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de la demande",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Request"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Demandes"
+                ],
+                "summary": "Supprimer une demande",
+                "description": "Supprime une demande. Seul le demandeur ou un administrateur peut supprimer. Les demandes déjà traitées ne peuvent pas être supprimées.",
+                "operationId": "7c04836331904938f1f81014a626ba0d",
+                "parameters": [
+                    {
+                        "name": "request",
+                        "in": "path",
+                        "description": "ID de la demande",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Demande supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande supprimée avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "422": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/requests/{request}/validate": {
+            "put": {
+                "tags": [
+                    "Demandes"
+                ],
+                "summary": "Valider ou rejeter une demande",
+                "description": "Permet à un superviseur ou administrateur de valider ou rejeter une demande de bypass",
+                "operationId": "fba1eae2cc65368db7fe51d619d7f266",
+                "parameters": [
+                    {
+                        "name": "request",
+                        "in": "path",
+                        "description": "ID de la demande",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "validation_status"
+                                ],
+                                "properties": {
+                                    "validation_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "approved",
+                                            "rejected"
+                                        ],
+                                        "example": "approved"
+                                    },
+                                    "rejection_reason": {
+                                        "type": "string",
+                                        "example": "Raison du rejet si applicable",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Demande validée/rejetée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Request"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "422": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/requests/mine": {
+            "get": {
+                "tags": [
+                    "Demandes"
+                ],
+                "summary": "Mes demandes",
+                "description": "Récupère toutes les demandes créées par l'utilisateur connecté",
+                "operationId": "3ee299abf1939af66a483aa5752f5c10",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes de l'utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Request"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/requests/pending": {
+            "get": {
+                "tags": [
+                    "Demandes"
+                ],
+                "summary": "Demandes en attente de validation",
+                "description": "Récupère les demandes en attente de validation. Accessible aux superviseurs et administrateurs.",
+                "operationId": "74f60c347fc7bf37a3cc2091b58e7c25",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes en attente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Request"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/requests/active": {
+            "get": {
+                "tags": [
+                    "Demandes"
+                ],
+                "summary": "Demandes actives",
+                "description": "Récupère les demandes actives (approuvées ou en cours). Accessible aux superviseurs et administrateurs.",
+                "operationId": "cf3ecaa0e0e609f4e113563da85864e1",
+                "responses": {
+                    "200": {
+                        "description": "Liste des demandes actives",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Request"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/equipment/{equipment}/sensors": {
+            "get": {
+                "tags": [
+                    "Capteurs"
+                ],
+                "summary": "Liste des capteurs d'un équipement",
+                "description": "Récupère tous les capteurs associés à un équipement spécifique",
+                "operationId": "096d320a08790a5c1f09db885d914343",
+                "parameters": [
+                    {
+                        "name": "equipment",
+                        "in": "path",
+                        "description": "ID de l'équipement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des capteurs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Sensor"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Capteurs"
+                ],
+                "summary": "Créer un capteur",
+                "description": "Crée un nouveau capteur pour un équipement. Accessible uniquement aux administrateurs.",
+                "operationId": "158d056440b3f7944bf51f4c2c1a96da",
+                "parameters": [
+                    {
+                        "name": "equipment",
+                        "in": "path",
+                        "description": "ID de l'équipement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "type",
+                                    "unit",
+                                    "criticalThreshold"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Capteur Température"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "Température"
+                                    },
+                                    "unit": {
+                                        "type": "string",
+                                        "example": "°C"
+                                    },
+                                    "criticalThreshold": {
+                                        "type": "string",
+                                        "example": "50"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "bypassed",
+                                            "maintenance",
+                                            "faulty",
+                                            "calibration"
+                                        ],
+                                        "example": "active"
+                                    },
+                                    "last_reading": {
+                                        "type": "number",
+                                        "example": 25.5,
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Capteur créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Sensor"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "422": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/sensors/{sensor}": {
+            "get": {
+                "tags": [
+                    "Capteurs"
+                ],
+                "summary": "Détails d'un capteur",
+                "description": "Récupère les détails d'un capteur spécifique avec son équipement",
+                "operationId": "60dc5af5fb5d87ae03c74f6ffed53968",
+                "parameters": [
+                    {
+                        "name": "sensor",
+                        "in": "path",
+                        "description": "ID du capteur",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails du capteur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Sensor"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Capteurs"
+                ],
+                "summary": "Mettre à jour un capteur",
+                "description": "Met à jour les informations d'un capteur. Accessible uniquement aux administrateurs.",
+                "operationId": "1d70ea6b51af8d33e8124a8e8eb06b4d",
+                "parameters": [
+                    {
+                        "name": "sensor",
+                        "in": "path",
+                        "description": "ID du capteur",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Capteur Température"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "Température"
+                                    },
+                                    "unit": {
+                                        "type": "string",
+                                        "example": "°C"
+                                    },
+                                    "criticalThreshold": {
+                                        "type": "string",
+                                        "example": "50"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "bypassed",
+                                            "maintenance",
+                                            "faulty",
+                                            "calibration"
+                                        ],
+                                        "example": "active"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Capteur mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Sensor"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Capteurs"
+                ],
+                "summary": "Supprimer un capteur",
+                "description": "Supprime un capteur. Accessible uniquement aux administrateurs.",
+                "operationId": "2cac48377a74621fd696b50a2dcb3218",
+                "parameters": [
+                    {
+                        "name": "sensor",
+                        "in": "path",
+                        "description": "ID du capteur",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Capteur supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Capteur supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/sensors": {
+            "get": {
+                "tags": [
+                    "Capteurs"
+                ],
+                "summary": "Liste de tous les capteurs",
+                "description": "Récupère la liste de tous les capteurs avec leurs équipements et zones",
+                "operationId": "7753a7bae22c1cf397f71a7c0f4354ab",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des capteurs paginée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Sensor"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/admin/settings": {
+            "get": {
+                "tags": [
+                    "Système"
+                ],
+                "summary": "Récupérer les paramètres système",
+                "description": "Récupère tous les paramètres système. Accessible uniquement aux administrateurs.",
+                "operationId": "37d9fba8c688b992f8e957d44fadebfa",
+                "responses": {
+                    "200": {
+                        "description": "Paramètres système",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "example": {
+                                        "setting_key": "setting_value"
+                                    },
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Système"
+                ],
+                "summary": "Mettre à jour les paramètres système",
+                "description": "Met à jour les paramètres système. Accessible uniquement aux administrateurs.",
+                "operationId": "9e34bd3d02bab281f17d33eb82d73221",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "settings"
+                                ],
+                                "properties": {
+                                    "settings": {
+                                        "type": "object",
+                                        "example": {
+                                            "setting_key": "setting_value"
+                                        },
+                                        "additionalProperties": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Paramètres mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Paramètres mis à jour avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "422": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/history": {
+            "get": {
+                "tags": [
+                    "Système"
+                ],
+                "summary": "Historique des actions",
+                "description": "Récupère l'historique des actions système (audit log). Accessible uniquement aux administrateurs.",
+                "operationId": "9088e6f485c6383b94df7bb5be4e1fe8",
+                "parameters": [
+                    {
+                        "name": "action",
+                        "in": "query",
+                        "description": "Filtrer par type d'action",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "user_id",
+                        "in": "query",
+                        "description": "Filtrer par utilisateur",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from_date",
+                        "in": "query",
+                        "description": "Date de début (format: YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to_date",
+                        "in": "query",
+                        "description": "Date de fin (format: YYYY-MM-DD)",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historique des actions paginé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "current_page": {
+                                            "type": "integer"
+                                        },
+                                        "total": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users": {
+            "get": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Liste des utilisateurs",
+                "description": "Récupère la liste des utilisateurs. Accessible uniquement aux administrateurs.",
+                "operationId": "7e2f5799553ec93c9c43e2a58490d447",
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "description": "Filtrer par rôle",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "administrator",
+                                "supervisor",
+                                "operator",
+                                "user"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Rechercher dans username, nom ou email",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs paginée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Créer un utilisateur",
+                "description": "Crée un nouvel utilisateur. Accessible uniquement aux administrateurs.",
+                "operationId": "a1fce870c566eb5fc0cf3178ec5d2fed",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "firstName",
+                                    "lastName",
+                                    "email",
+                                    "password",
+                                    "phone",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "firstName": {
+                                        "type": "string",
+                                        "example": "Jean"
+                                    },
+                                    "lastName": {
+                                        "type": "string",
+                                        "example": "Dupont"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jean.dupont@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "example": "password123"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+33123456789"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "user",
+                                            "supervisor",
+                                            "administrator",
+                                            "director"
+                                        ],
+                                        "example": "user"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Utilisateur créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "422": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/users/{user}": {
+            "get": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Détails d'un utilisateur",
+                "description": "Récupère les détails d'un utilisateur. Les utilisateurs peuvent voir leurs propres informations, les administrateurs peuvent voir toutes.",
+                "operationId": "0b9800c6a2369ce94c1efa162edfa374",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "ID de l'utilisateur",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de l'utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Mettre à jour un utilisateur",
+                "description": "Met à jour les informations d'un utilisateur. Les utilisateurs peuvent modifier leurs propres informations (sauf le rôle), les administrateurs peuvent tout modifier.",
+                "operationId": "caaec06bf33a577d630c028222869ee6",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "ID de l'utilisateur",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "example": "jdupont"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "jean.dupont@example.com"
+                                    },
+                                    "full_name": {
+                                        "type": "string",
+                                        "example": "Jean Dupont"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+33123456789"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "example": "newpassword123"
+                                    },
+                                    "role": {
+                                        "description": "Uniquement modifiable par les administrateurs",
+                                        "type": "string",
+                                        "enum": [
+                                            "user",
+                                            "supervisor",
+                                            "administrator"
+                                        ]
+                                    },
+                                    "is_active": {
+                                        "description": "Uniquement modifiable par les administrateurs",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur mis à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Utilisateurs"
+                ],
+                "summary": "Supprimer un utilisateur",
+                "description": "Supprime un utilisateur. Accessible uniquement aux administrateurs. Impossible de supprimer son propre compte.",
+                "operationId": "a4e18f8517afcc062825920ffb6cd762",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "ID de l'utilisateur",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur supprimé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Utilisateur supprimé avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "422": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/zones": {
+            "get": {
+                "tags": [
+                    "Zones"
+                ],
+                "summary": "Liste des zones",
+                "description": "Récupère la liste des zones avec leurs équipements",
+                "operationId": "c7bcbad1f7a7a16d0d2aeb2352d5db08",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filtrer par statut",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "inactive",
+                                "maintenance"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Rechercher dans le nom",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Numéro de page",
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des zones paginée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Zone"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Zones"
+                ],
+                "summary": "Créer une zone",
+                "description": "Crée une nouvelle zone. Accessible uniquement aux administrateurs.",
+                "operationId": "51c3a538062d2083811159b30f38400e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Zone A"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Description de la zone",
+                                        "nullable": true
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Bâtiment A",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "inactive",
+                                            "maintenance"
+                                        ],
+                                        "example": "active"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Zone créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Zone"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "422": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/zones/{zone}": {
+            "get": {
+                "tags": [
+                    "Zones"
+                ],
+                "summary": "Détails d'une zone",
+                "description": "Récupère les détails d'une zone avec ses équipements",
+                "operationId": "cb4285a9029a20c76945c5bbb9a16850",
+                "parameters": [
+                    {
+                        "name": "zone",
+                        "in": "path",
+                        "description": "ID de la zone",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails de la zone",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Zone"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Zones"
+                ],
+                "summary": "Mettre à jour une zone",
+                "description": "Met à jour les informations d'une zone. Accessible uniquement aux administrateurs.",
+                "operationId": "1d5dc48ead02dad313061454bd4e32f0",
+                "parameters": [
+                    {
+                        "name": "zone",
+                        "in": "path",
+                        "description": "ID de la zone",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Zone A"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "inactive",
+                                            "maintenance"
+                                        ],
+                                        "example": "active"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Zone mise à jour avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Zone"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Zones"
+                ],
+                "summary": "Supprimer une zone",
+                "description": "Supprime une zone. Accessible uniquement aux administrateurs.",
+                "operationId": "f4735b595d3f15790dc60fe498acdacd",
+                "parameters": [
+                    {
+                        "name": "zone",
+                        "in": "path",
+                        "description": "ID de la zone",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Zone supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Zone supprimée avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "404": {
+                        "$ref": "#/components/schemas/Error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Error": {
+                "properties": {
+                    "message": {
+                        "description": "Message d'erreur",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "Success": {
+                "properties": {
+                    "message": {
+                        "description": "Message de succès",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "username": {
+                        "type": "string",
+                        "example": "admin"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "admin@example.com"
+                    },
+                    "full_name": {
+                        "type": "string",
+                        "example": "Administrateur Système"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "administrator",
+                            "supervisor",
+                            "operator"
+                        ],
+                        "example": "administrator"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "+33123456789",
+                        "nullable": true
+                    },
+                    "is_active": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            },
+            "Request": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "request_code": {
+                        "type": "string",
+                        "example": "BR-2025-001"
+                    },
+                    "requester_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Maintenance préventive"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Description détaillée"
+                    },
+                    "priority": {
+                        "type": "string",
+                        "enum": [
+                            "low",
+                            "normal",
+                            "high",
+                            "critical",
+                            "emergency"
+                        ],
+                        "example": "high"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected",
+                            "in_progress",
+                            "completed"
+                        ],
+                        "example": "pending"
+                    },
+                    "equipment_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "sensor_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "validated_by_id": {
+                        "type": "integer",
+                        "example": 2,
+                        "nullable": true
+                    },
+                    "submitted_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "validated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Equipment": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "code": {
+                        "type": "string",
+                        "example": "EQ-ZA-001"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Équipement 1"
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "Capteur de température"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "operational",
+                            "maintenance",
+                            "down",
+                            "standby"
+                        ],
+                        "example": "operational"
+                    },
+                    "zone_id": {
+                        "type": "integer",
+                        "example": 1
+                    }
+                },
+                "type": "object"
+            },
+            "Zone": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Zone A"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Description de la zone",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "inactive",
+                            "maintenance"
+                        ],
+                        "example": "active"
+                    }
+                },
+                "type": "object"
+            },
+            "Sensor": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "equipment_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Capteur Température"
+                    },
+                    "type": {
+                        "type": "string",
+                        "example": "Température"
+                    },
+                    "code": {
+                        "type": "string",
+                        "example": "TEMP-001"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "active"
+                    }
+                },
+                "type": "object"
+            },
+            "PaginatedResponse": {
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "current_page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "last_page": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "per_page": {
+                        "type": "integer",
+                        "example": 15
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 75
+                    },
+                    "from": {
+                        "type": "integer",
+                        "example": 1,
+                        "nullable": true
+                    },
+                    "to": {
+                        "type": "integer",
+                        "example": 15,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "apiKey",
+                "description": "Token d'authentification Bearer (obtenu via /api/auth/login)",
+                "name": "Authorization",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentification",
+            "description": "Endpoints pour l'authentification des utilisateurs"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Endpoints pour le tableau de bord"
+        },
+        {
+            "name": "Demandes",
+            "description": "Endpoints pour la gestion des demandes de bypass"
+        },
+        {
+            "name": "Zones",
+            "description": "Endpoints pour la gestion des zones"
+        },
+        {
+            "name": "Équipements",
+            "description": "Endpoints pour la gestion des équipements"
+        },
+        {
+            "name": "Capteurs",
+            "description": "Endpoints pour la gestion des capteurs"
+        },
+        {
+            "name": "Utilisateurs",
+            "description": "Endpoints pour la gestion des utilisateurs"
+        },
+        {
+            "name": "Système",
+            "description": "Endpoints d'administration système"
+        }
+    ],
+    "security": [
+        {
+            "sanctum": []
+        }
+    ]
+}
