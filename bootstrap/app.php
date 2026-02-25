@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(\App\Http\Middleware\CorrelationId::class);
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->alias([
             'isAdmin' => \App\Http\Middleware\RoleMiddleware::class,
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
@@ -19,10 +21,19 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
         $middleware->statefulApi();
+        $middleware->throttleApi('api');
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->renderable(function (\App\Exceptions\BusinessException $e) {
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => $e->getErrorCode(),
+                    'message' => $e->getMessage(),
+                ],
+            ], $e->getHttpStatus());
+        });
     })->create();

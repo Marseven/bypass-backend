@@ -1,0 +1,431 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Relation 'requester' is not found in App\\\\Models\\\\Request model\\.$#"
+			count: 2
+			path: app/Console/Commands/ProcessRequests.php
+
+		-
+			message: "#^Relation 'equipment' is not found in App\\\\Models\\\\Request model\\.$#"
+			count: 1
+			path: app/Console/Commands/ReactivateSensors.php
+
+		-
+			message: "#^Relation 'requester' is not found in App\\\\Models\\\\Request model\\.$#"
+			count: 1
+			path: app/Console/Commands/ReactivateSensors.php
+
+		-
+			message: "#^Relation 'sensor' is not found in App\\\\Models\\\\Request model\\.$#"
+			count: 2
+			path: app/Console/Commands/ReactivateSensors.php
+
+		-
+			message: "#^Relation 'equipment' is not found in App\\\\Models\\\\Request model\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Relation 'equipment' is not found in App\\\\Models\\\\Sensor model\\.$#"
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: "#^Relation 'sensors' is not found in App\\\\Models\\\\Equipment model\\.$#"
+			count: 1
+			path: app/Http/Controllers/EquipmentController.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Request\\:\\:\\$message\\.$#"
+			count: 1
+			path: app/Http/Controllers/RequestController.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\Request\\:\\:\\$to\\.$#"
+			count: 1
+			path: app/Http/Controllers/RequestController.php
+
+		-
+			message: "#^Call to an undefined method App\\\\Models\\\\Request\\:\\:validate\\(\\)\\.$#"
+			count: 1
+			path: app/Http/Controllers/RequestController.php
+
+		-
+			message: "#^Relation 'equipment' is not found in App\\\\Models\\\\Request model\\.$#"
+			count: 4
+			path: app/Http/Controllers/RequestController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:\\$guard_name\\.$#"
+			count: 2
+			path: app/Http/Controllers/RolePermissionController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:\\$id\\.$#"
+			count: 2
+			path: app/Http/Controllers/RolePermissionController.php
+
+		-
+			message: "#^Access to an undefined property Illuminate\\\\Database\\\\Eloquent\\\\Model\\:\\:\\$name\\.$#"
+			count: 2
+			path: app/Http/Controllers/RolePermissionController.php
+
+		-
+			message: "#^Relation 'equipment' is not found in App\\\\Models\\\\Sensor model\\.$#"
+			count: 1
+			path: app/Http/Controllers/SensorController.php
+
+		-
+			message: "#^Called 'pluck' on Laravel collection, but could have been retrieved as a query\\.$#"
+			count: 1
+			path: app/Http/Controllers/SystemController.php
+
+		-
+			message: "#^Relation 'user' is not found in App\\\\Models\\\\AuditLog model\\.$#"
+			count: 1
+			path: app/Http/Controllers/SystemController.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\User\\:\\:\\$spatie_permissions\\.$#"
+			count: 1
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Models\\\\User\\:\\:\\$spatie_roles\\.$#"
+			count: 4
+			path: app/Http/Controllers/UserController.php
+
+		-
+			message: "#^Relation 'equipements' is not found in App\\\\Models\\\\Zone model\\.$#"
+			count: 1
+			path: app/Http/Controllers/ZoneController.php
+
+		-
+			message: "#^Access to an undefined property \\(object\\|string\\)\\:\\:\\$requester_id\\.$#"
+			count: 1
+			path: app/Http/Requests/UpdateRequestRequest.php
+
+		-
+			message: "#^Access to an undefined property \\(object\\|string\\)\\:\\:\\$status\\.$#"
+			count: 1
+			path: app/Http/Requests/UpdateRequestRequest.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$code\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$created_at\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$criticite\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$description\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$fabricant\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$id\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$name\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$status\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$type\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$updated_at\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\EquipmentResource\\:\\:\\$zone_id\\.$#"
+			count: 1
+			path: app/Http/Resources/EquipmentResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$commentaires\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$created_at\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$description\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$end_time\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$id\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$impact_environnemental\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$impact_operationnel\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$impact_securite\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$mesure_attenuation\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$plan_contingence\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$priority\\.$#"
+			count: 3
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$rejection_reason\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$rejection_reason_level1\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$rejection_reason_level2\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$request_code\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$start_time\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$status\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$submitted_at\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$title\\.$#"
+			count: 3
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$updated_at\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$validated_at\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$validated_at_level1\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$validated_at_level2\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$validation_required_by_role\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$validation_status_level1\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\RequestResource\\:\\:\\$validation_status_level2\\.$#"
+			count: 1
+			path: app/Http/Resources/RequestResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$Dernier_Etallonnage\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$code\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$created_at\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$equipment_id\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$id\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$last_reading\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$last_reading_at\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$name\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$seuil_critique\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$status\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$type\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$unite\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\SensorResource\\:\\:\\$updated_at\\.$#"
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\UserResource\\:\\:\\$created_at\\.$#"
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\UserResource\\:\\:\\$email\\.$#"
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\UserResource\\:\\:\\$full_name\\.$#"
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\UserResource\\:\\:\\$id\\.$#"
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\UserResource\\:\\:\\$is_active\\.$#"
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\UserResource\\:\\:\\$phone\\.$#"
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\UserResource\\:\\:\\$role\\.$#"
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\UserResource\\:\\:\\$username\\.$#"
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\ZoneResource\\:\\:\\$created_at\\.$#"
+			count: 1
+			path: app/Http/Resources/ZoneResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\ZoneResource\\:\\:\\$description\\.$#"
+			count: 1
+			path: app/Http/Resources/ZoneResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\ZoneResource\\:\\:\\$id\\.$#"
+			count: 1
+			path: app/Http/Resources/ZoneResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\ZoneResource\\:\\:\\$location\\.$#"
+			count: 1
+			path: app/Http/Resources/ZoneResource.php
+
+		-
+			message: "#^Access to an undefined property App\\\\Http\\\\Resources\\\\ZoneResource\\:\\:\\$name\\.$#"
+			count: 1
+			path: app/Http/Resources/ZoneResource.php
+
+		-
+			message: "#^Unsafe call to private method App\\\\Models\\\\Request\\:\\:generateRequestCode\\(\\) through static\\:\\:\\.$#"
+			count: 1
+			path: app/Models/Request.php

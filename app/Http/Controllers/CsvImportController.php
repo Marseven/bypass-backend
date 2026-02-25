@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ImportCsvJob;
 use App\Services\CsvImportService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -186,31 +187,45 @@ class CsvImportController extends Controller
      */
     protected function handleImport(Request $request, string $type): JsonResponse
     {
-        // Validate file
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt|max:5120', // 5MB max
+            'file' => 'required|file|mimes:csv,txt|max:5120',
         ]);
 
         try {
             $file = $request->file('file');
             $content = file_get_contents($file->getRealPath());
 
-            // Parse CSV
             $data = $this->importService->parseCsv($content, $type);
 
             if (empty($data)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Aucune donnée valide trouvée dans le fichier CSV'
+                    'message' => 'Aucune donnée valide trouvée dans le fichier CSV',
                 ], 400);
             }
 
-            // Process import based on type
+            // Async for large files (>100 rows)
+            if (count($data) > 100) {
+                $storedPath = $file->store('imports');
+                $fullPath = storage_path('app/' . $storedPath);
+
+                ImportCsvJob::dispatch($fullPath, $type, $request->user()->id);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => count($data) . " lignes détectées. L'import est en cours de traitement en arrière-plan.",
+                    'data' => [
+                        'async' => true,
+                        'total' => count($data),
+                    ],
+                ], 202);
+            }
+
             $result = match ($type) {
                 'zones' => $this->importService->importZones($data),
                 'equipment' => $this->importService->importEquipment($data),
                 'sensors' => $this->importService->importSensors($data),
-                default => throw new \Exception('Type invalide')
+                default => throw new \Exception('Type invalide'),
             };
 
             $statusCode = $result['success'] ? 200 : 400;
@@ -224,17 +239,16 @@ class CsvImportController extends Controller
                     'total' => $result['total'],
                     'imported' => $result['imported'],
                     'errors_count' => count($result['errors']),
-                    'errors' => array_slice($result['errors'], 0, 10), // Limit to first 10 errors
+                    'errors' => array_slice($result['errors'], 0, 10),
                     'created_ids' => $result['created_ids'],
-                ]
+                ],
             ], $statusCode);
-
         } catch (\Exception $e) {
             Log::error("CSV Import Error ($type): " . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 400);
         }
     }

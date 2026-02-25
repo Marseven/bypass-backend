@@ -4,10 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property int $equipment_id
+ * @property string $code
+ * @property string $name
+ * @property string $type
+ * @property string $unite
+ * @property string $seuil_critique
+ * @property string $Dernier_Etallonnage
+ * @property string $status
+ * @property float|null $last_reading
+ * @property \Carbon\Carbon|null $last_reading_at
+ * @property \Carbon\Carbon|null $created_at
+ * @property \Carbon\Carbon|null $updated_at
+ * @property \Carbon\Carbon|null $deleted_at
+ * @property-read Equipment $equipment
+ */
 class Sensor extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'equipment_id',

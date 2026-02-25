@@ -2,22 +2,51 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property int $id
+ * @property string $username
+ * @property string $email
+ * @property \Carbon\Carbon|null $email_verified_at
+ * @property string $password
+ * @property string $full_name
+ * @property string $role
+ * @property string|null $phone
+ * @property bool $is_active
+ * @property string|null $remember_token
+ * @property \Carbon\Carbon|null $created_at
+ * @property \Carbon\Carbon|null $updated_at
+ */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasApiTokens, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    // CDC roles
+    public const ROLE_OPERATEUR = 'operateur';
+    public const ROLE_TECHNICIEN = 'technicien';
+    public const ROLE_INSTRUMENTISTE = 'instrumentiste';
+    public const ROLE_CHEF_DE_QUART = 'chef_de_quart';
+    public const ROLE_RESPONSABLE_HSE = 'responsable_hse';
+    public const ROLE_RESP_EXPLOITATION = 'resp_exploitation';
+    public const ROLE_DIRECTEUR = 'directeur';
+    public const ROLE_ADMINISTRATEUR = 'administrateur';
+
+    public const CDC_ROLES = [
+        self::ROLE_OPERATEUR,
+        self::ROLE_TECHNICIEN,
+        self::ROLE_INSTRUMENTISTE,
+        self::ROLE_CHEF_DE_QUART,
+        self::ROLE_RESPONSABLE_HSE,
+        self::ROLE_RESP_EXPLOITATION,
+        self::ROLE_DIRECTEUR,
+        self::ROLE_ADMINISTRATEUR,
+    ];
+
     protected $fillable = [
         'username',
         'email',
@@ -28,21 +57,11 @@ class User extends Authenticatable
         'is_active',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -51,7 +70,6 @@ class User extends Authenticatable
             'is_active' => 'boolean',
         ];
     }
-
 
     public function submittedRequests()
     {
@@ -68,57 +86,102 @@ class User extends Authenticatable
         return $this->hasMany(AuditLog::class);
     }
 
-    /**
-     * Vérifie si l'utilisateur est administrateur (via Spatie ou champ role)
-     */
+    // ── Role checks ──────────────────────────────────────────────
+
+    public function isRole(string $role): bool
+    {
+        return $this->role === $role || $this->hasRole($role);
+    }
+
+    public function isAdministrateur(): bool
+    {
+        return $this->isRole(self::ROLE_ADMINISTRATEUR);
+    }
+
+    // Legacy alias
     public function isAdministrator(): bool
     {
-        return $this->hasRole('administrator') || $this->role === 'administrator';
+        return $this->isAdministrateur()
+            || $this->role === 'administrator'
+            || $this->hasRole('administrator');
     }
 
-    /**
-     * Vérifie si l'utilisateur est superviseur (via Spatie ou champ role)
-     */
     public function isSupervisor(): bool
     {
-        return $this->hasRole('supervisor') || $this->role === 'supervisor';
+        return $this->isRole(self::ROLE_CHEF_DE_QUART)
+            || $this->role === 'supervisor'
+            || $this->hasRole('supervisor');
     }
 
-    /**
-     * Vérifie si l'utilisateur est directeur (via Spatie ou champ role)
-     */
     public function isDirector(): bool
     {
-        return $this->hasRole('director') || $this->role === 'director';
+        return $this->isRole(self::ROLE_DIRECTEUR)
+            || $this->role === 'director'
+            || $this->hasRole('director');
     }
 
-    /**
-     * Vérifie si l'utilisateur peut valider des demandes
-     */
+    public function isResponsableHse(): bool
+    {
+        return $this->isRole(self::ROLE_RESPONSABLE_HSE);
+    }
+
+    public function isRespExploitation(): bool
+    {
+        return $this->isRole(self::ROLE_RESP_EXPLOITATION);
+    }
+
+    public function isInstrumentiste(): bool
+    {
+        return $this->isRole(self::ROLE_INSTRUMENTISTE);
+    }
+
+    public function isTechnicien(): bool
+    {
+        return $this->isRole(self::ROLE_TECHNICIEN);
+    }
+
+    // ── Validation permissions ───────────────────────────────────
+
     public function canValidateRequests(): bool
     {
-        return $this->hasAnyPermission(['requests.validate.level1', 'requests.validate.level2']) 
-            || $this->hasAnyRole(['supervisor', 'administrator', 'director'])
-            || in_array($this->role, ['supervisor', 'administrator', 'director']);
+        return $this->hasAnyPermission(['requests.validate.level1', 'requests.validate.level2'])
+            || $this->hasAnyRole([
+                self::ROLE_CHEF_DE_QUART, self::ROLE_RESPONSABLE_HSE,
+                self::ROLE_RESP_EXPLOITATION, self::ROLE_DIRECTEUR, self::ROLE_ADMINISTRATEUR,
+                'supervisor', 'administrator', 'director', // legacy
+            ])
+            || in_array($this->role, [
+                self::ROLE_CHEF_DE_QUART, self::ROLE_RESPONSABLE_HSE,
+                self::ROLE_RESP_EXPLOITATION, self::ROLE_DIRECTEUR, self::ROLE_ADMINISTRATEUR,
+                'supervisor', 'administrator', 'director', // legacy
+            ]);
     }
 
-    /**
-     * Vérifie si l'utilisateur peut valider niveau 1
-     */
     public function canValidateLevel1(): bool
     {
-        return $this->hasPermissionTo('requests.validate.level1') 
-            || $this->hasAnyRole(['supervisor', 'administrator', 'director'])
-            || in_array($this->role, ['supervisor', 'administrator', 'director']);
+        return $this->hasPermissionTo('requests.validate.level1')
+            || $this->hasAnyRole([
+                self::ROLE_CHEF_DE_QUART, self::ROLE_RESP_EXPLOITATION,
+                self::ROLE_ADMINISTRATEUR,
+                'supervisor', 'administrator', 'director',
+            ])
+            || in_array($this->role, [
+                self::ROLE_CHEF_DE_QUART, self::ROLE_RESP_EXPLOITATION,
+                self::ROLE_ADMINISTRATEUR,
+                'supervisor', 'administrator', 'director',
+            ]);
     }
 
-    /**
-     * Vérifie si l'utilisateur peut valider niveau 2
-     */
     public function canValidateLevel2(): bool
     {
-        return $this->hasPermissionTo('requests.validate.level2') 
-            || $this->hasAnyRole(['administrator', 'director'])
-            || in_array($this->role, ['administrator', 'director']);
+        return $this->hasPermissionTo('requests.validate.level2')
+            || $this->hasAnyRole([
+                self::ROLE_DIRECTEUR, self::ROLE_ADMINISTRATEUR,
+                'administrator', 'director',
+            ])
+            || in_array($this->role, [
+                self::ROLE_DIRECTEUR, self::ROLE_ADMINISTRATEUR,
+                'administrator', 'director',
+            ]);
     }
 }

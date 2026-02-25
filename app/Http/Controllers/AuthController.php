@@ -132,7 +132,10 @@ class AuthController extends Controller
     {
         AuditLog::log('User Logout', $request->user());
         
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->user()->currentAccessToken();
+        if (method_exists($token, 'delete')) {
+            $token->delete();
+        }
 
         return response()->json(['message' => 'Déconnexion réussie']);
     }

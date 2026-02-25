@@ -41,7 +41,11 @@ class ZoneController extends Controller
     )]
     public function index(Request $request)
     {
-        $query = Zone::with('equipements');
+        $query = Zone::with(['equipements', 'site']);
+
+        if ($request->has('site_id')) {
+            $query->where('site_id', $request->site_id);
+        }
 
         if ($request->has('status')) {
             $query->where('status', $request->status);

@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateSensorRequest;
+use App\Http\Resources\SensorResource;
 use App\Models\Sensor;
 use App\Models\Equipment;
 use App\Models\AuditLog;
-use App\Models\Zone;
+use App\Services\CodeGenerationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
 
 class SensorController extends Controller
 {
+    public function __construct(
+        private CodeGenerationService $codeService,
+    ) {}
     #[OA\Get(
         path: "/equipment/{equipment}/sensors",
         summary: "Liste des capteurs d'un équipement",
@@ -38,27 +42,9 @@ class SensorController extends Controller
     )]
     public function index(Equipment $equipment)
     {
-        return response()->json($equipment->sensors);
+        return SensorResource::collection($equipment->sensors);
     }
 
-    public function sensorCode($sensor, $equipment, $zone, $num = 1) {
-        // 5 premiers caractères capteur (sans "SENSOR")
-        $prefix = substr(str_replace(['SENSOR', 'CAPTEUR'], '', 
-            strtoupper(preg_replace('/[^A-Z0-9]/', '', $sensor))), 0, 5);
-        
-        // 2 lettres équipement  
-        $eqWords = explode(' ', strtoupper($equipment));
-        $eqCode = substr($eqWords[0], 0, 1) . substr($eqWords[1] ?? $eqWords[0], 0, 1);
-        
-        // 1 lettre zone
-        preg_match('/Zone\s+([A-Z])/i', $zone, $m);
-        $zoneCode = $m[1] ?? substr($zone, 0, 1);
-        
-        // 2 derniers caractères capteur
-        $suffix = substr(preg_replace('/[^A-Z0-9]/', '', strtoupper($sensor)), -2);
-        
-        return sprintf('%s-%s-%s-%03d-%s', $prefix, $eqCode, $zoneCode, $num, $suffix);
-    }
 
     #[OA\Post(
         path: "/equipment/{equipment}/sensors",
@@ -105,15 +91,12 @@ class SensorController extends Controller
             return response()->json(['message' => 'Non autorisé'], 403);
         }
 
-        // Charger la zone depuis la relation de l'équipement
         $equipment->load('zone');
-        $zonei = $equipment->zone;
-        
-        if (!$zonei) {
+        $zone = $equipment->zone;
+
+        if (!$zone) {
             return response()->json(['message' => 'Zone non trouvée pour cet équipement'], 404);
         }
-        
-        $nms = Sensor::all()->count() + 1;
 
         $request->validate([
             'last_reading' => 'sometimes|nullable|numeric',
@@ -125,67 +108,27 @@ class SensorController extends Controller
             'status' => 'sometimes|in:active,bypassed,maintenance,faulty,calibration',
         ]);
 
-        try {
-            // Vérifier que l'équipement a un nom
-            if (!$equipment->name) {
-                Log::error('Equipment name is missing', ['equipment_id' => $equipment->id]);
-                return response()->json(['message' => 'L\'équipement n\'a pas de nom'], 400);
-            }
+        $sensor = $equipment->sensors()->create([
+            'name' => $request->name,
+            'code' => $this->codeService->generateSensorCode($request->name, $equipment->name, $zone->name),
+            'type' => $request->type,
+            'equipment_id' => $equipment->id,
+            'seuil_critique' => $request->criticalThreshold,
+            'unite' => $request->unit,
+            'Dernier_Etallonnage' => now(),
+            'status' => $request->status ?? 'active',
+            'last_reading_at' => now(),
+        ]);
 
-            // Vérifier que la zone a un nom
-            if (!$zonei->name) {
-                Log::error('Zone name is missing', ['zone_id' => $zonei->id, 'equipment_id' => $equipment->id]);
-                return response()->json(['message' => 'La zone n\'a pas de nom'], 400);
-            }
+        AuditLog::log(
+            'Sensor Created',
+            auth()->user(),
+            'Sensor',
+            $sensor->id,
+            ['name' => $sensor->name, 'equipment' => $equipment->name]
+        );
 
-            // Valeur par défaut pour le statut
-            $status = $request->status ?? 'active';
-
-            // Log des données avant création
-            Log::info('Creating sensor', [
-                'name' => $request->name,
-                'type' => $request->type,
-                'unit' => $request->unit,
-                'criticalThreshold' => $request->criticalThreshold,
-                'status' => $status,
-                'equipment_id' => $equipment->id,
-                'equipment_name' => $equipment->name,
-                'zone_name' => $zonei->name
-            ]);
-
-            $sensorCode = $this->sensorCode($request->name, $equipment->name, $zonei->name, $nms);
-            
-            Log::info('Generated sensor code', ['code' => $sensorCode]);
-
-            $sensor = $equipment->sensors()->create([
-               'name' => $request->name,
-                'code' => $sensorCode,
-                'type' => $request->type,
-                'equipment_id' => $equipment->id,
-                'seuil_critique' => $request->criticalThreshold,
-                'unite' => $request->unit,
-                'Dernier_Etallonnage' => now(),
-                'status' => $status,
-                'last_reading_at' => now()
-            ]);
-
-            AuditLog::log(
-                'Sensor Created',
-                auth()->user(),
-                'Sensor',
-                $sensor->id,
-                ['name' => $sensor->name, 'equipment' => $equipment->name]
-            );
-
-            return response()->json($sensor, 201);
-        } catch (\Exception $e) {
-            Log::error('Error creating sensor: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            return response()->json([
-                'message' => 'Erreur lors de la création du capteur',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return (new SensorResource($sensor))->response()->setStatusCode(201);
     }
 
     #[OA\Get(
@@ -211,7 +154,7 @@ class SensorController extends Controller
     )]
     public function show(Sensor $sensor)
     {
-        return response()->json($sensor->load('equipment'));
+        return new SensorResource($sensor->load(['equipment', 'requests.requester']));
     }
 
     #[OA\Get(
@@ -241,7 +184,7 @@ class SensorController extends Controller
     )]
     public function showSensor()
     {
-        return response()->json(Sensor::with('equipment.zone')->paginate(15));
+        return SensorResource::collection(Sensor::with('equipment.zone')->paginate(15));
     }
 
     #[OA\Put(
@@ -281,26 +224,8 @@ class SensorController extends Controller
             new OA\Response(response: 404, description: "Capteur non trouvé", ref: "#/components/schemas/Error"),
         ]
     )]
-    public function update(Request $request, Sensor $sensor)
+    public function update(UpdateSensorRequest $request, Sensor $sensor)
     {
-        if (!auth()->user()->isAdministrator()) {
-            return response()->json(['message' => 'Non autorisé'], 403);
-        }
-
-        $request->validate([
-            'last_reading' => 'sometimes|nullable|numeric',
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'unit' => 'required|string|max:255',
-            'criticalThreshold' => 'required|string|max:255',
-            'Dernier_Etallonage' => 'sometimes|string|max:255',
-            'status' => 'sometimes|in:active,bypassed,maintenance,faulty,calibration',
-        ]);
-
-        if ($request->has('last_reading')) {
-            $request->merge(['last_reading_at' => now()]);
-        }
-
         $sensor->update([
             'name' => $request->name,
             'type' => $request->type,
@@ -320,7 +245,7 @@ class SensorController extends Controller
             ['name' => $sensor->name]
         );
 
-        return response()->json($sensor);
+        return new SensorResource($sensor);
     }
 
     #[OA\Delete(

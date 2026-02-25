@@ -7,7 +7,9 @@ use App\Models\Request;
 use App\Models\User;
 use App\Models\Equipment;
 use App\Models\Sensor;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use OpenApi\Attributes as OA;
 
@@ -39,15 +41,17 @@ class DashboardController extends Controller
             new OA\Response(response: 401, description: "Non authentifié", ref: "#/components/schemas/Error"),
         ]
     )]
-    public function summary()
+    public function summary(): JsonResponse
     {
-        $data = [
-            'new_requests' => Request::pending()->count(),
-            'active_requests' => Request::active()->count(),
-            'pending_validation' => Request::pending()->count(),
-            'approved_today' => Request::approvedToday()->count(),
-            'connected_users' => User::where('is_active', true)->count(),
-        ];
+        $data = Cache::remember('dashboard:summary', 300, function () {
+            return [
+                'new_requests' => Request::pending()->count(),
+                'active_requests' => Request::active()->count(),
+                'pending_validation' => Request::pending()->count(),
+                'approved_today' => Request::approvedToday()->count(),
+                'connected_users' => User::where('is_active', true)->count(),
+            ];
+        });
 
         return response()->json($data);
     }
@@ -73,12 +77,14 @@ class DashboardController extends Controller
             new OA\Response(response: 401, description: "Non authentifié", ref: "#/components/schemas/Error"),
         ]
     )]
-    public function recentRequests()
+    public function recentRequests(): JsonResponse
     {
-        $requests = Request::with(['requester', 'equipment.zone', 'sensor', 'validator'])
-                          ->orderBy('created_at', 'desc')
-                          ->limit(10)
-                          ->get();
+        $requests = Cache::remember('dashboard:recent_requests', 120, function () {
+            return Request::with(['requester', 'equipment.zone', 'sensor', 'validator'])
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+        });
 
         return response()->json($requests);
     }
@@ -108,100 +114,105 @@ class DashboardController extends Controller
             new OA\Response(response: 401, description: "Non authentifié", ref: "#/components/schemas/Error"),
         ]
     )]
-    public function systemStatus()
+    public function systemStatus(): JsonResponse
     {
-        $totalEquipment = Equipment::count();
-        $activeEquipment = Equipment::active()->count();
+        $data = Cache::remember('dashboard:system_status', 300, function () {
+            $totalEquipment = Equipment::count();
+            $activeEquipment = Equipment::active()->count();
 
-        $totalSensors = Sensor::count();
-        $onlineSensors = Sensor::online()->count();
+            $totalSensors = Sensor::count();
+            $onlineSensors = Sensor::online()->count();
 
-        $totalAlerts = Request::count();
-        $activeAlerts = Request::where('status', 'approved')->count();
+            $totalAlerts = Request::count();
+            $activeAlerts = Request::where('status', 'approved')->count();
 
-        // Calculer les ratios
-        $equipmentPerformance = $totalEquipment > 0 ? ($activeEquipment / $totalEquipment) * 100 : 0;
-        $sensorPerformance = $totalSensors > 0 ? ($onlineSensors / $totalSensors) * 100 : 0;
-        $alertPerformance = $totalAlerts > 0 ? ((1 - ($activeAlerts / $totalAlerts)) * 100) : 100;
+            $equipmentPerformance = $totalEquipment > 0 ? ($activeEquipment / $totalEquipment) * 100 : 0;
+            $sensorPerformance = $totalSensors > 0 ? ($onlineSensors / $totalSensors) * 100 : 0;
+            $alertPerformance = $totalAlerts > 0 ? ((1 - ($activeAlerts / $totalAlerts)) * 100) : 100;
 
-        // Moyenne pondérée des performances
-        $systemPerformance = ($equipmentPerformance * 0.4) + ($sensorPerformance * 0.4) + ($alertPerformance * 0.2);
+            $systemPerformance = ($equipmentPerformance * 0.4) + ($sensorPerformance * 0.4) + ($alertPerformance * 0.2);
 
-        $data = [
-            'monitored_equipment' => $activeEquipment,
-            'online_sensors' => $onlineSensors,
-            'active_alerts' => $activeAlerts,
-            'system_performance' => round($systemPerformance, 2), // Arrondi à 2 décimales
-        ];
+            return [
+                'monitored_equipment' => $activeEquipment,
+                'online_sensors' => $onlineSensors,
+                'active_alerts' => $activeAlerts,
+                'system_performance' => round($systemPerformance, 2),
+            ];
+        });
 
         return response()->json($data);
     }
 
-    public function requestStatistics(HttpRequest $request)
+    public function requestStatistics(HttpRequest $request): JsonResponse
     {
-        // Par défaut, on récupère les 30 derniers jours
-        $days = $request->get('days', 30);
-        $startDate = \Carbon\Carbon::now()->subDays($days)->startOfDay();
-        $endDate = \Carbon\Carbon::now()->endOfDay();
+        $days = (int) $request->get('days', 30);
+        $cacheKey = "dashboard:request_statistics:{$days}";
 
-        // Générer toutes les dates de la période
-        $dates = [];
-        $currentDate = $startDate->copy();
-        while ($currentDate->lte($endDate)) {
-            $dates[] = $currentDate->format('Y-m-d');
-            $currentDate->addDay();
-        }
+        $statistics = Cache::remember($cacheKey, 600, function () use ($days) {
+            $startDate = \Carbon\Carbon::now()->subDays($days)->startOfDay();
+            $endDate = \Carbon\Carbon::now()->endOfDay();
 
-        // Récupérer toutes les demandes de la période
-        $requests = Request::whereBetween('created_at', [$startDate, $endDate])
-            ->get();
+            // SQL GROUP BY instead of loading all records into PHP
+            $grouped = Request::whereBetween('created_at', [$startDate, $endDate])
+                ->select(
+                    DB::raw('DATE(created_at) as date'),
+                    DB::raw('COUNT(*) as total'),
+                    DB::raw("SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved"),
+                    DB::raw("SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected"),
+                )
+                ->groupBy(DB::raw('DATE(created_at)'))
+                ->pluck(null, 'date')
+                ->keyBy('date');
 
-        // Agréger les données par date
-        $statistics = [];
-        foreach ($dates as $date) {
-            $dayRequests = $requests->filter(function ($req) use ($date) {
-                return \Carbon\Carbon::parse($req->created_at)->format('Y-m-d') === $date;
-            });
+            // Fill all dates in the period
+            $statistics = [];
+            $currentDate = $startDate->copy();
+            while ($currentDate->lte($endDate)) {
+                $date = $currentDate->format('Y-m-d');
+                $row = $grouped->get($date);
+                $statistics[] = [
+                    'date' => $date,
+                    'total' => $row ? (int) $row->total : 0,
+                    'approved' => $row ? (int) $row->approved : 0,
+                    'rejected' => $row ? (int) $row->rejected : 0,
+                ];
+                $currentDate->addDay();
+            }
 
-            $total = $dayRequests->count();
-            $approved = $dayRequests->where('status', 'approved')->count();
-            $rejected = $dayRequests->where('status', 'rejected')->count();
-
-            $statistics[] = [
-                'date' => $date,
-                'total' => $total,
-                'approved' => $approved,
-                'rejected' => $rejected,
-            ];
-        }
+            return $statistics;
+        });
 
         return response()->json($statistics);
     }
 
-    public function topSensors()
+    public function topSensors(): JsonResponse
     {
-        $limit = 10; // Top 10 capteurs
-        
-        $sensors = Request::select('sensor_id', DB::raw('COUNT(*) as request_count'))
-            ->whereNotNull('sensor_id')
-            ->groupBy('sensor_id')
-            ->orderBy('request_count', 'desc')
-            ->limit($limit)
-            ->get();
+        $result = Cache::remember('dashboard:top_sensors', 600, function () {
+            $sensorIds = Request::select('sensor_id', DB::raw('COUNT(*) as request_count'))
+                ->whereNotNull('sensor_id')
+                ->groupBy('sensor_id')
+                ->orderBy('request_count', 'desc')
+                ->limit(10)
+                ->get();
 
-        $result = [];
-        foreach ($sensors as $sensorStat) {
-            $sensor = Sensor::with('equipment')->find($sensorStat->sensor_id);
-            if ($sensor) {
-                $result[] = [
+            // Eager load all sensors in one query instead of N+1
+            $sensors = Sensor::with('equipment')
+                ->whereIn('id', $sensorIds->pluck('sensor_id'))
+                ->get()
+                ->keyBy('id');
+
+            $countMap = $sensorIds->pluck('request_count', 'sensor_id');
+
+            return $sensors->map(function (Sensor $sensor) use ($countMap) {
+                return [
                     'sensor_id' => $sensor->id,
                     'sensor_name' => $sensor->name,
                     'sensor_code' => $sensor->code,
-                    'equipment_name' => $sensor->equipment ? $sensor->equipment->name : 'N/A',
-                    'request_count' => $sensorStat->request_count
+                    'equipment_name' => $sensor->equipment?->name ?? 'N/A',
+                    'request_count' => $countMap[$sensor->id] ?? 0,
                 ];
-            }
-        }
+            })->sortByDesc('request_count')->values()->all();
+        });
 
         return response()->json($result);
     }

@@ -3,15 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateEquipmentRequest;
+use App\Http\Requests\UpdateEquipmentRequest;
+use App\Http\Resources\EquipmentResource;
 use App\Models\Equipment;
 use App\Models\AuditLog;
 use App\Models\Zone;
+use App\Services\CodeGenerationService;
 use Illuminate\Http\Request;
-use Log;
 use OpenApi\Attributes as OA;
 
 class EquipmentController extends Controller
 {
+    public function __construct(
+        private CodeGenerationService $codeService,
+    ) {}
 
     public function index_equipements(Zone $zone)
     {
@@ -64,19 +69,7 @@ class EquipmentController extends Controller
 
         $equipment = $query->orderBy('name')->paginate(15);
 
-        return response()->json($equipment);
-    }
-
-    public function codeEquipment($equipment, $zone, $num = 1) {
-        // Consonnes: premier + deuxième mot
-        $words = explode(' ', strtoupper($equipment));
-        $consonants = substr($words[0], 0, 1) . substr($words[1] ?? $words[0], 0, 1);
-        
-        // Zone: extraire lettre après "Zone"
-        preg_match('/Zone\s+([A-Z])/i', $zone, $m);
-        $zoneCode = $m[1] ?? substr($zone, 0, 1);
-        
-        return $consonants . '-' . strtoupper($zoneCode) . '-' . sprintf('%03d', $num);
+        return EquipmentResource::collection($equipment);
     }
 
     #[OA\Post(
@@ -118,35 +111,31 @@ class EquipmentController extends Controller
     )]
     public function store(CreateEquipmentRequest $request)
     {
-        if($request->validated()){
+        $zonei = Zone::where('name', $request->zone)->first();
 
-            $zonei = Zone::where('name', $request->zone)->first();
-            $nums= Equipment::all()->count() + 1;
+        $equipment = Equipment::create([
+            'name' => $request->name,
+            'code' => $this->codeService->generateEquipmentCode($request->name, $zonei->name),
+            'type' => $request->type,
+            'type_systeme' => $request->type_systeme ?? 'process',
+            'niveau_sil' => $request->niveau_sil ?? 'na',
+            'fonction_securite' => $request->fonction_securite,
+            'criticite' => $request->criticite,
+            'fabricant' => $request->fabricant,
+            'description' => $request->description,
+            'zone_id' => $zonei->id,
+            'status' => strtolower($request->status),
+        ]);
 
-            $equipment = Equipment::create([
-                'name' => $request->name,
-                'code' => $this->codeEquipment($request->name, $zonei->name,$nums),
-                'type' => $request->type,
-                'criticite' => $request->criticite,
-                'fabricant' => $request->fabricant,
-                'description' => $request->description,
-                'zone_id' => $zonei->id,
-                'status' => strtolower($request->status),
-            ]);
-            
-            AuditLog::log(
-                'Equipment Created',
-                auth()->user(),
-                'Equipment',
-                $equipment->id,
-                ['name' => $equipment->name, 'location' => $equipment->location]
-            );
+        AuditLog::log(
+            'Equipment Created',
+            auth()->user(),
+            'Equipment',
+            $equipment->id,
+            ['name' => $equipment->name]
+        );
 
-            return response()->json($equipment, 201);
-        } else {
-            return response()->json($request->errors(), 203);
-        }
-        
+        return (new EquipmentResource($equipment))->response()->setStatusCode(201);
     }
 
     #[OA\Get(
@@ -172,7 +161,7 @@ class EquipmentController extends Controller
     )]
     public function show(Equipment $equipment)
     {
-        return response()->json($equipment->load('sensors'));
+        return new EquipmentResource($equipment->load('sensors'));
     }
 
     #[OA\Put(
@@ -210,32 +199,30 @@ class EquipmentController extends Controller
             new OA\Response(response: 404, description: "Équipement non trouvé", ref: "#/components/schemas/Error"),
         ]
     )]
-    public function update(Request $request, Equipment $equipment)
+    public function update(UpdateEquipmentRequest $request, Equipment $equipment)
     {
-        if (!auth()->user()->isAdministrator()) {
-            return response()->json(['message' => 'Non autorisé'], 403);
-        }
-
-        $request->validate(rules: [
-            'name' => 'sometimes|string|max:255',
-            'status' => 'sometimes|in:operational,maintenance,down,standby',
-            'type' => 'sometimes|string|max:255',
-            'criticite' => 'sometimes|string|max:255',
-            'fabricant' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'zone' => 'sometimes|string|max:255',
-        ]);
-
         $zonei = Zone::where('name', $request->zone)->first();
 
-        $equipment->update([
+        $data = [
             'name' => $request->name,
             'type' => $request->type,
             'criticite' => $request->criticite,
             'fabricant' => $request->fabricant,
             'zone_id' => $zonei->id,
             'status' => strtolower($request->status),
-        ]);
+        ];
+
+        if ($request->has('type_systeme')) {
+            $data['type_systeme'] = $request->type_systeme;
+        }
+        if ($request->has('niveau_sil')) {
+            $data['niveau_sil'] = $request->niveau_sil;
+        }
+        if ($request->has('fonction_securite')) {
+            $data['fonction_securite'] = $request->fonction_securite;
+        }
+
+        $equipment->update($data);
 
         AuditLog::log(
             'Equipment Updated',
@@ -245,7 +232,7 @@ class EquipmentController extends Controller
             ['name' => $equipment->name]
         );
 
-        return response()->json($equipment);
+        return new EquipmentResource($equipment);
     }
 
     #[OA\Delete(

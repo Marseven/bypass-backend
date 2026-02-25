@@ -10,6 +10,35 @@ use OpenApi\Attributes as OA;
 class SystemController extends Controller
 {
     #[OA\Get(
+        path: "/settings/public",
+        summary: "Récupérer les paramètres publics d'affichage",
+        description: "Retourne les paramètres d'affichage (nom app, tagline). Aucune authentification requise.",
+        tags: ["Système"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Paramètres publics",
+                content: new OA\MediaType(
+                    mediaType: "application/json",
+                    schema: new OA\Schema(
+                        properties: [
+                            new OA\Property(property: "app_name", type: "string", example: "MineSafe OS"),
+                            new OA\Property(property: "app_tagline", type: "string", example: "Gestion des bypass"),
+                        ]
+                    )
+                )
+            ),
+        ]
+    )]
+    public function getPublicSettings()
+    {
+        return response()->json([
+            'app_name' => SystemSetting::get('app_name', 'MineSafe OS'),
+            'app_tagline' => SystemSetting::get('app_tagline', 'Gestion des bypass'),
+        ]);
+    }
+
+    #[OA\Get(
         path: "/admin/settings",
         summary: "Récupérer les paramètres système",
         description: "Récupère tous les paramètres système. Accessible uniquement aux administrateurs.",

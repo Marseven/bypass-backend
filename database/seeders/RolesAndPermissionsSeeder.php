@@ -9,17 +9,13 @@ use Spatie\Permission\Models\Permission;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Réinitialiser les rôles et permissions en cache
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Créer les permissions
+        // ── Permissions ──────────────────────────────────────────
         $permissions = [
-            // Permissions pour les demandes
+            // Requests
             'requests.create',
             'requests.view.own',
             'requests.view.all',
@@ -27,32 +23,47 @@ class RolesAndPermissionsSeeder extends Seeder
             'requests.delete.own',
             'requests.validate.level1',
             'requests.validate.level2',
-            
-            // Permissions pour les utilisateurs
+
+            // Bypass lifecycle (CDC)
+            'bypass.create.process',
+            'bypass.create.securite',
+            'bypass.activate',
+            'bypass.close',
+            'bypass.approve.short_term',
+            'bypass.approve.long_term',
+            'bypass.approve.security',
+
+            // ORA (CDC)
+            'ora.validate',
+
+            // MOC (CDC)
+            'moc.trigger',
+
+            // Users
             'users.view',
             'users.create',
             'users.update',
             'users.delete',
-            
-            // Permissions pour les équipements
+
+            // Equipment
             'equipment.view',
             'equipment.create',
             'equipment.update',
             'equipment.delete',
-            
-            // Permissions pour les zones
+
+            // Zones
             'zones.view',
             'zones.create',
             'zones.update',
             'zones.delete',
-            
-            // Permissions pour les capteurs
+
+            // Sensors
             'sensors.view',
             'sensors.create',
             'sensors.update',
             'sensors.delete',
-            
-            // Permissions système
+
+            // System
             'system.settings.manage',
             'history.view',
             'dashboard.view',
@@ -62,11 +73,126 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Créer les rôles et assigner les permissions
-        
-        // Rôle: User (opérateur)
-        $userRole = Role::firstOrCreate(['name' => 'user']);
-        $userRole->givePermissionTo([
+        // ── CDC Roles (8) ────────────────────────────────────────
+
+        // Opérateur : consultation
+        $operateur = Role::firstOrCreate(['name' => 'operateur']);
+        $operateur->syncPermissions([
+            'dashboard.view',
+            'requests.view.own',
+        ]);
+
+        // Technicien : création bypass process
+        $technicien = Role::firstOrCreate(['name' => 'technicien']);
+        $technicien->syncPermissions([
+            'dashboard.view',
+            'requests.view.own',
+            'requests.create',
+            'requests.update.own',
+            'requests.delete.own',
+            'bypass.create.process',
+        ]);
+
+        // Instrumentiste : création bypass sécurité, activation/fermeture
+        $instrumentiste = Role::firstOrCreate(['name' => 'instrumentiste']);
+        $instrumentiste->syncPermissions([
+            'dashboard.view',
+            'requests.view.own',
+            'requests.create',
+            'requests.update.own',
+            'requests.delete.own',
+            'bypass.create.process',
+            'bypass.create.securite',
+            'bypass.activate',
+            'bypass.close',
+        ]);
+
+        // Chef de quart : approbation court terme
+        $chefDeQuart = Role::firstOrCreate(['name' => 'chef_de_quart']);
+        $chefDeQuart->syncPermissions([
+            'dashboard.view',
+            'requests.view.own',
+            'requests.view.all',
+            'requests.create',
+            'requests.update.own',
+            'requests.delete.own',
+            'requests.validate.level1',
+            'bypass.approve.short_term',
+            'equipment.view',
+            'zones.view',
+            'sensors.view',
+        ]);
+
+        // Responsable HSE : validation ORA, approbation sécurité
+        $responsableHse = Role::firstOrCreate(['name' => 'responsable_hse']);
+        $responsableHse->syncPermissions([
+            'dashboard.view',
+            'requests.view.own',
+            'requests.view.all',
+            'requests.validate.level1',
+            'ora.validate',
+            'bypass.approve.security',
+            'equipment.view',
+            'zones.view',
+            'sensors.view',
+        ]);
+
+        // Resp exploitation : approbation long terme
+        $respExploitation = Role::firstOrCreate(['name' => 'resp_exploitation']);
+        $respExploitation->syncPermissions([
+            'dashboard.view',
+            'requests.view.own',
+            'requests.view.all',
+            'requests.create',
+            'requests.update.own',
+            'requests.validate.level1',
+            'requests.validate.level2',
+            'bypass.approve.long_term',
+            'equipment.view',
+            'equipment.create',
+            'equipment.update',
+            'equipment.delete',
+            'zones.view',
+            'zones.create',
+            'zones.update',
+            'zones.delete',
+            'sensors.view',
+        ]);
+
+        // Directeur : approbation sécurité, MOC
+        $directeur = Role::firstOrCreate(['name' => 'directeur']);
+        $directeur->syncPermissions([
+            'dashboard.view',
+            'requests.view.own',
+            'requests.view.all',
+            'requests.create',
+            'requests.update.own',
+            'requests.delete.own',
+            'requests.validate.level1',
+            'requests.validate.level2',
+            'bypass.approve.security',
+            'moc.trigger',
+            'equipment.view',
+            'equipment.create',
+            'equipment.update',
+            'equipment.delete',
+            'zones.view',
+            'zones.create',
+            'zones.update',
+            'zones.delete',
+            'sensors.view',
+            'sensors.create',
+            'sensors.update',
+            'sensors.delete',
+        ]);
+
+        // Administrateur : all permissions
+        $administrateur = Role::firstOrCreate(['name' => 'administrateur']);
+        $administrateur->syncPermissions(Permission::all());
+
+        // ── Legacy roles (keep for backward compatibility) ──────
+        $legacyUser = Role::firstOrCreate(['name' => 'user']);
+        $legacyUser->syncPermissions([
             'requests.create',
             'requests.view.own',
             'requests.update.own',
@@ -74,9 +200,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'dashboard.view',
         ]);
 
-        // Rôle: Supervisor (superviseur - validation niveau 1)
-        $supervisorRole = Role::firstOrCreate(['name' => 'supervisor']);
-        $supervisorRole->givePermissionTo([
+        $legacySupervisor = Role::firstOrCreate(['name' => 'supervisor']);
+        $legacySupervisor->syncPermissions([
             'requests.create',
             'requests.view.own',
             'requests.view.all',
@@ -89,9 +214,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'dashboard.view',
         ]);
 
-        // Rôle: Director (directeur - validation niveau 2)
-        $directorRole = Role::firstOrCreate(['name' => 'director']);
-        $directorRole->givePermissionTo([
+        $legacyDirector = Role::firstOrCreate(['name' => 'director']);
+        $legacyDirector->syncPermissions([
             'requests.create',
             'requests.view.own',
             'requests.view.all',
@@ -114,8 +238,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'dashboard.view',
         ]);
 
-        // Rôle: Administrator (administrateur - tous les droits + validation niveau 2)
-        $adminRole = Role::firstOrCreate(['name' => 'administrator']);
-        $adminRole->givePermissionTo(Permission::all());
+        $legacyAdmin = Role::firstOrCreate(['name' => 'administrator']);
+        $legacyAdmin->syncPermissions(Permission::all());
     }
 }

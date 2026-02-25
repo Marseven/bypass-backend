@@ -36,5 +36,17 @@ class SystemSettingSeeder extends Seeder
             'value' => 'notifications@bypassguard.com',
             'description' => 'Email pour les notifications système',
         ]);
+
+        SystemSetting::create([
+            'key' => 'app_name',
+            'value' => 'MineSafe OS',
+            'description' => 'Nom de l\'application affiché dans l\'interface',
+        ]);
+
+        SystemSetting::create([
+            'key' => 'app_tagline',
+            'value' => 'Gestion des bypass',
+            'description' => 'Sous-titre de l\'application',
+        ]);
     }
 }

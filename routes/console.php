@@ -9,20 +9,13 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
+// Process requests hourly (expiration warnings need frequent checks)
+Schedule::command('app:process-requests')->hourly();
 
-// Artisan::command('schedule:tasks', function (Schedule $schedule) {
-//     // Tâche 1 : exécuter la commande artisan deux fois par jour (08h00 et 16h00)
-//     $schedule->command('app:process-requests')->twiceDaily(8, 16);
+Schedule::command('sensors:reactivate')->daily();
 
-//     // Tâche 2 : test de fonctionnement toutes les minutes
-//     $schedule->call(function () {
-//         Log::info('Le cron job fonctionne correctement.');
-//     })->everyMinute();
-// })->purpose('Planifier les tâches quotidiennes');
-
-Schedule::command('app:process-requests')->twiceDaily(8, 15);
-
-Schedule::command('sensors:reactivate');
+// Purge old records monthly (6-month retention)
+Schedule::command('app:purge-old-records')->monthly();
 
 Schedule::call(function () {
     Log::info('Le cron job fonctionne correctement.');
