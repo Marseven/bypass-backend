@@ -19,7 +19,7 @@ REMOTE_PATH="${HOSTINGER_API_PATH:-/home/u566067487/domains/jobs-conseil.host/pu
 BRANCH="${BRANCH:-main}"
 
 # PHP 8.2 binary path on Hostinger (default php is 7.4)
-PHP_BIN="${PHP_BIN:-/usr/bin/php8.2}"
+PHP_BIN="${PHP_BIN:-/opt/alt/php82/usr/bin/php}"
 COMPOSER_BIN="$PHP_BIN /usr/local/bin/composer"
 
 echo "=== ByPass API Deploy ==="
