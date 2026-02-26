@@ -28,7 +28,7 @@ git pull origin "${BRANCH}"
 
 # 2. Install dependencies with PHP 8.2
 echo "[2/3] Installing production dependencies..."
-${COMPOSER_BIN} install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+${COMPOSER_BIN} install --no-interaction --prefer-dist --optimize-autoloader
 
 # 3. Run post-deploy commands
 echo "[3/3] Running post-deploy commands..."
