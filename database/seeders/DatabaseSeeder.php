@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,9 +11,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-        $this->call(UserSeeder::class);
-        $this->call(EquipmentSeeder::class);
-        $this->call(SystemSettingSeeder::class);
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+            SiteSeeder::class,
+            EquipmentSeeder::class,
+            UserSeeder::class,
+            SystemSettingSeeder::class,
+        ]);
     }
 }
