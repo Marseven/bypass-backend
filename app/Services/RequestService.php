@@ -15,6 +15,7 @@ use App\Models\Request;
 use App\Models\RequestApproval;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -100,7 +101,7 @@ class RequestService implements \App\Contracts\RequestServiceInterface
     public function submitDraft(Request $request, User $user): Request
     {
         if ($request->status !== RequestStatus::Draft->value) {
-            abort(422, 'Seuls les brouillons peuvent être soumis');
+            throw new HttpResponseException(response()->json(['message' => 'Seuls les brouillons peuvent être soumis'], 422));
         }
 
         $request->update([
@@ -126,7 +127,7 @@ class RequestService implements \App\Contracts\RequestServiceInterface
     public function activateApprovedBypass(Request $request, User $user): Request
     {
         if ($request->status !== RequestStatus::Approved->value) {
-            abort(422, 'Seules les demandes approuvées peuvent être activées');
+            throw new HttpResponseException(response()->json(['message' => 'Seules les demandes approuvées peuvent être activées'], 422));
         }
 
         $request->update(['status' => RequestStatus::Active->value]);
@@ -146,7 +147,7 @@ class RequestService implements \App\Contracts\RequestServiceInterface
     public function closeBypass(Request $request, User $user): Request
     {
         if ($request->status !== RequestStatus::Active->value) {
-            abort(422, 'Seuls les bypass actifs peuvent être clôturés');
+            throw new HttpResponseException(response()->json(['message' => 'Seuls les bypass actifs peuvent être clôturés'], 422));
         }
 
         $request->update(['status' => RequestStatus::Closed->value]);
@@ -186,11 +187,11 @@ class RequestService implements \App\Contracts\RequestServiceInterface
         $nextApproval = $request->nextPendingApproval();
 
         if (!$nextApproval) {
-            abort(422, 'Aucune approbation en attente');
+            throw new HttpResponseException(response()->json(['message' => 'Aucune approbation en attente'], 422));
         }
 
         if (!$this->approvalWorkflowService->canUserApprove($validator, $nextApproval)) {
-            abort(403, "Non autorisé : rôle '{$nextApproval->required_role}' requis");
+            throw new HttpResponseException(response()->json(['message' => "Non autorisé : rôle '{$nextApproval->required_role}' requis"], 403));
         }
 
         $nextApproval->update([
@@ -244,7 +245,7 @@ class RequestService implements \App\Contracts\RequestServiceInterface
     private function handleSimpleValidation(Request $request, array $data, User $validator): Request
     {
         if (!$validator->canValidateRequests()) {
-            abort(403, 'Non autorisé à valider');
+            throw new HttpResponseException(response()->json(['message' => 'Non autorisé à valider'], 403));
         }
 
         $request->update([
@@ -282,7 +283,7 @@ class RequestService implements \App\Contracts\RequestServiceInterface
             return $this->handleLevel2Validation($request, $data, $validator);
         }
 
-        abort(403, 'Non autorisé à valider cette demande');
+        throw new HttpResponseException(response()->json(['message' => 'Non autorisé à valider cette demande'], 403));
     }
 
     private function handleLevel1Validation(Request $request, array $data, User $validator): Request
@@ -322,7 +323,7 @@ class RequestService implements \App\Contracts\RequestServiceInterface
     private function handleLevel2Validation(Request $request, array $data, User $validator): Request
     {
         if ($request->validation_status_level1 !== ValidationStatus::Approved->value) {
-            abort(422, 'La validation niveau 1 (supervisor) doit être approuvée avant la validation niveau 2');
+            throw new HttpResponseException(response()->json(['message' => 'La validation niveau 1 (supervisor) doit être approuvée avant la validation niveau 2'], 422));
         }
 
         $request->update([
