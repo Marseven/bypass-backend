@@ -10,11 +10,16 @@ class SiteSeeder extends Seeder
     public function run(): void
     {
         $sites = [
-            ['code' => 'PG-NORD', 'name' => 'Port-Gentil Nord', 'location' => 'Zone industrielle Nord, Port-Gentil'],
-            ['code' => 'PG-SUD', 'name' => 'Port-Gentil Sud', 'location' => 'Zone industrielle Sud, Port-Gentil'],
-            ['code' => 'PG-EST', 'name' => 'Port-Gentil Est', 'location' => 'Zone industrielle Est, Port-Gentil'],
-            ['code' => 'PG-OUEST', 'name' => 'Port-Gentil Ouest', 'location' => 'Zone industrielle Ouest, Port-Gentil'],
-            ['code' => 'PG-CENTRE', 'name' => 'Port-Gentil Centre', 'location' => 'Zone industrielle Centre, Port-Gentil'],
+            [
+                'code' => 'CML-MOANDA',
+                'name' => 'Complexe Minier de Moanda',
+                'location' => 'Moanda, Haut-Ogooue, Gabon',
+            ],
+            [
+                'code' => 'CML-OWENDO',
+                'name' => 'Terminal Mineralier d\'Owendo',
+                'location' => 'Owendo, Estuaire, Gabon',
+            ],
         ];
 
         foreach ($sites as $site) {

@@ -2,51 +2,48 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\SystemSetting;
+use Illuminate\Database\Seeder;
 
 class SystemSettingSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        SystemSetting::create([
-            'key' => 'default_priority',
-            'value' => 'medium',
-            'description' => 'Priorité par défaut pour les nouvelles demandes',
-        ]);
+        $settings = [
+            [
+                'key' => 'default_priority',
+                'value' => 'medium',
+                'description' => 'Priorite par defaut pour les nouvelles demandes',
+            ],
+            [
+                'key' => 'auto_escalation_hours',
+                'value' => '24',
+                'description' => 'Nombre d\'heures avant escalade automatique',
+            ],
+            [
+                'key' => 'max_pending_requests_per_user',
+                'value' => '5',
+                'description' => 'Nombre maximum de demandes en attente par utilisateur',
+            ],
+            [
+                'key' => 'notification_email',
+                'value' => 'notifications@comilog.com',
+                'description' => 'Email pour les notifications systeme',
+            ],
+            [
+                'key' => 'app_name',
+                'value' => 'ByPass',
+                'description' => 'Nom de l\'application affiche dans l\'interface',
+            ],
+            [
+                'key' => 'app_tagline',
+                'value' => 'Systeme de gestion des bypass — COMILOG Moanda',
+                'description' => 'Sous-titre de l\'application',
+            ],
+        ];
 
-        SystemSetting::create([
-            'key' => 'auto_escalation_hours',
-            'value' => '24',
-            'description' => 'Nombre d\'heures avant escalade automatique',
-        ]);
-
-        SystemSetting::create([
-            'key' => 'max_pending_requests_per_user',
-            'value' => '5',
-            'description' => 'Nombre maximum de demandes en attente par utilisateur',
-        ]);
-
-        SystemSetting::create([
-            'key' => 'notification_email',
-            'value' => 'notifications@bypassguard.com',
-            'description' => 'Email pour les notifications système',
-        ]);
-
-        SystemSetting::create([
-            'key' => 'app_name',
-            'value' => 'MineSafe OS',
-            'description' => 'Nom de l\'application affiché dans l\'interface',
-        ]);
-
-        SystemSetting::create([
-            'key' => 'app_tagline',
-            'value' => 'Gestion des bypass',
-            'description' => 'Sous-titre de l\'application',
-        ]);
+        foreach ($settings as $setting) {
+            SystemSetting::create($setting);
+        }
     }
 }
