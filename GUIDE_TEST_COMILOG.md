@@ -1,4 +1,4 @@
-# Guide de Test Complet — MineSafe OS / COMILOG
+# Guide de Test Complet — ByPass / COMILOG
 
 > **Version** : 1.0
 > **Date** : Fevrier 2026
