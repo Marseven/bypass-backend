@@ -17,6 +17,7 @@ class UserResource extends JsonResource
             'role' => $this->role,
             'phone' => $this->phone,
             'is_active' => $this->is_active,
+            'two_fa_enabled' => (bool) $this->two_fa_enabled,
             'created_at' => $this->created_at?->toISOString(),
         ];
     }

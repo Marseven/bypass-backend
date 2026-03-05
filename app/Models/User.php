@@ -19,6 +19,10 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $phone
  * @property bool $is_active
  * @property string|null $remember_token
+ * @property string|null $two_fa_secret
+ * @property bool $two_fa_enabled
+ * @property string|null $two_fa_backup_codes
+ * @property \Carbon\Carbon|null $two_fa_verified_at
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
  */
@@ -55,11 +59,17 @@ class User extends Authenticatable
         'role',
         'phone',
         'is_active',
+        'two_fa_secret',
+        'two_fa_enabled',
+        'two_fa_backup_codes',
+        'two_fa_verified_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'two_fa_secret',
+        'two_fa_backup_codes',
     ];
 
     protected function casts(): array
@@ -68,6 +78,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'two_fa_enabled' => 'boolean',
+            'two_fa_verified_at' => 'datetime',
         ];
     }
 

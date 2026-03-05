@@ -89,8 +89,19 @@ class AuthController extends Controller
                 'message' => ['Les informations d\'identification fournies sont incorrectes.'],
             ], 401);
         }
-        
-        // Créer un token sans expiration (gestion d'expiration côté frontend uniquement)
+
+        // If 2FA is enabled, return a temporary token for OTP verification
+        if ($user->two_fa_enabled) {
+            $tempToken = $user->createToken('2fa-verify', ['2fa-verify'], now()->addMinutes(5))->plainTextToken;
+
+            return response()->json([
+                'status' => 200,
+                'requires_2fa' => true,
+                'temp_token' => $tempToken,
+                'message' => ['Vérification 2FA requise.'],
+            ]);
+        }
+
         $token = $user->createToken('auth-token', ['*'])->plainTextToken;
 
         AuditLog::log('User Login', $user);
@@ -102,7 +113,6 @@ class AuthController extends Controller
                 'token' => $token,
             ],
             'message' => ['Connexion réussie'],
-            
         ]);
     }
 
@@ -160,6 +170,11 @@ class AuthController extends Controller
     )]
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+
+        return response()->json([
+            ...$user->toArray(),
+            'two_fa_enabled' => (bool) $user->two_fa_enabled,
+        ]);
     }
 }

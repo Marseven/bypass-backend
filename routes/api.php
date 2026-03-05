@@ -13,6 +13,7 @@ use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\NotificationPreferenceController;
+use App\Http\Controllers\TwoFactorController;
 use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,10 +37,19 @@ Route::prefix('v1')->group(function () {
     // Auth (public)
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 
+    // 2FA verify-login (accessible with temp token, rate-limited)
+    Route::post('/auth/2fa/verify-login', [TwoFactorController::class, 'verifyLogin'])
+        ->middleware(['auth:sanctum', 'throttle:5,1']);
+
     Route::middleware('auth:sanctum')->group(function () {
         // Auth
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
+
+        // 2FA management
+        Route::post('/auth/2fa/setup', [TwoFactorController::class, 'setup']);
+        Route::post('/auth/2fa/enable', [TwoFactorController::class, 'enable']);
+        Route::post('/auth/2fa/disable', [TwoFactorController::class, 'disable']);
 
         Route::get('/notifications', function () {
             return auth()->user()->notifications;
