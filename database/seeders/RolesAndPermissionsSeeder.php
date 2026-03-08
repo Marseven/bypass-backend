@@ -91,6 +91,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'requests.update.own',
             'requests.delete.own',
             'bypass.create.process',
+            'equipment.view',
+            'zones.view',
+            'sensors.view',
         ]);
 
         // Instrumentiste : création bypass sécurité, activation/fermeture
@@ -105,6 +108,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'bypass.create.securite',
             'bypass.activate',
             'bypass.close',
+            'equipment.view',
+            'zones.view',
+            'sensors.view',
         ]);
 
         // Chef de quart : approbation court terme
@@ -198,6 +204,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'requests.update.own',
             'requests.delete.own',
             'dashboard.view',
+            'equipment.view',
+            'zones.view',
+            'sensors.view',
         ]);
 
         $legacySupervisor = Role::firstOrCreate(['name' => 'supervisor']);
