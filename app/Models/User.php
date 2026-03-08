@@ -173,13 +173,13 @@ class User extends Authenticatable
     {
         return $this->hasPermissionTo('requests.validate.level1')
             || $this->hasAnyRole([
-                self::ROLE_CHEF_DE_QUART, self::ROLE_RESP_EXPLOITATION,
-                self::ROLE_ADMINISTRATEUR,
+                self::ROLE_CHEF_DE_QUART, self::ROLE_RESPONSABLE_HSE,
+                self::ROLE_RESP_EXPLOITATION, self::ROLE_ADMINISTRATEUR,
                 'supervisor', 'administrator', 'director',
             ])
             || in_array($this->role, [
-                self::ROLE_CHEF_DE_QUART, self::ROLE_RESP_EXPLOITATION,
-                self::ROLE_ADMINISTRATEUR,
+                self::ROLE_CHEF_DE_QUART, self::ROLE_RESPONSABLE_HSE,
+                self::ROLE_RESP_EXPLOITATION, self::ROLE_ADMINISTRATEUR,
                 'supervisor', 'administrator', 'director',
             ]);
     }
