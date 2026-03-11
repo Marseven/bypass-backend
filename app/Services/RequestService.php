@@ -275,12 +275,15 @@ class RequestService implements \App\Contracts\RequestServiceInterface
 
     private function handleDualValidation(Request $request, array $data, User $validator): Request
     {
-        if ($validator->canValidateLevel1() && !$validator->canValidateLevel2()) {
-            return $this->handleLevel1Validation($request, $data, $validator);
-        }
-
-        if ($validator->canValidateLevel2()) {
-            return $this->handleLevel2Validation($request, $data, $validator);
+        // Route by request state: if level1 is pending, validate level1; if level1 approved, validate level2
+        if ($request->validation_status_level1 !== ValidationStatus::Approved->value) {
+            if ($validator->canValidateLevel1()) {
+                return $this->handleLevel1Validation($request, $data, $validator);
+            }
+        } else {
+            if ($validator->canValidateLevel2()) {
+                return $this->handleLevel2Validation($request, $data, $validator);
+            }
         }
 
         throw new HttpResponseException(response()->json(['message' => 'Non autorisé à valider cette demande'], 403));

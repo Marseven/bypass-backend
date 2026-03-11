@@ -152,7 +152,7 @@ class ValidationWorkflowTest extends TestCase
         $this->assertEquals('rejected', $request->validation_status_level1);
     }
 
-    public function test_level2_cannot_validate_without_level1_approval(): void
+    public function test_level2_user_validates_level1_when_level1_pending(): void
     {
         $request = Request::factory()->critical()->create([
             'requester_id' => $this->user->id,
@@ -162,11 +162,17 @@ class ValidationWorkflowTest extends TestCase
             'validation_status_level2' => 'pending',
         ]);
 
+        // Admin (level2 user) validates level1 when it's pending
         $response = $this->actingAs($this->admin)->putJson("/api/v1/requests/{$request->id}/validate", [
             'validation_status' => 'approved',
         ]);
 
-        $response->assertStatus(422);
+        $response->assertStatus(200);
+        $request->refresh();
+        $this->assertEquals('approved', $request->validation_status_level1);
+        $this->assertEquals('pending', $request->validation_status_level2);
+        // Request still pending (needs level2)
+        $this->assertEquals('pending', $request->status);
     }
 
     public function test_bypass_activation_on_approval(): void
