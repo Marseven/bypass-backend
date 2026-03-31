@@ -37,6 +37,25 @@ class RequestService implements \App\Contracts\RequestServiceInterface
         $equipment = Equipment::find($validatedData['equipmentId']);
         $criticite = $equipment?->getBypassCriticality() ?? 'process';
 
+        // Prevent creating a non-draft request on equipment with an existing active/pending bypass
+        if (!$isDraft) {
+            $existingBypass = Request::where('equipment_id', $validatedData['equipmentId'])
+                ->whereIn('status', [
+                    RequestStatus::Pending->value,
+                    RequestStatus::Approved->value,
+                    RequestStatus::Active->value,
+                ])
+                ->exists();
+
+            if ($existingBypass) {
+                throw new HttpResponseException(
+                    response()->json([
+                        'message' => 'Un bypass actif ou en cours de validation existe déjà sur cet équipement. Veuillez attendre sa clôture avant d\'en créer un nouveau.',
+                    ], 422)
+                );
+            }
+        }
+
         // Auto-calculate duree_type
         $dureeType = DureeType::fromDurationHours($duration)->value;
 
